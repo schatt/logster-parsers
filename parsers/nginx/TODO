@@ -1,0 +1,9 @@
+nginx
+  access log
+    status code
+    response time
+    filesize
+
+  error log
+    connection timeout
+    total count
