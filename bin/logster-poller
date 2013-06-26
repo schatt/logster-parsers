@@ -1,0 +1,61 @@
+#!/usr/bin/env python
+import os
+import sys
+import glob
+import subprocess
+import yaml
+
+
+DEFAULT_CONFIG_PATH="/etc/logster-poller.yml"
+
+class LogsterPoller:
+
+  def __init__(self):
+    try:
+      configfile = sys.argv[1]
+    except IndexError:
+      configfile = DEFAULT_CONFIG_PATH
+
+    if os.path.exists(configfile):
+      c = yaml.load(open(configfile).read())
+      self.config = (c.get('logster') or {})
+    else:
+      print >> sys.stderr, "Cannot proceed: config file %s does not exist" % configfile
+      sys.exit(1)
+
+  def run(self):
+  # iterate over logsets
+    for name, config in (self.config.get('logs') or {}).items():
+      print >> sys.stderr, "Processing logset %s..." % name
+
+      logpaths = (config.get('logs') or [])
+
+    # convert single path into a 1-element list
+      if not isinstance(logpaths, list):
+        logpaths = [logpaths]
+
+    # for each path in the list of log file paths
+      for logpath in logpaths:
+        for logfile in glob.iglob(logpath):
+          if os.path.exists(logfile):
+            try:
+              if config.get('prefix'):
+                prefix  = subprocess.check_output("echo %s" % config.get('prefix'), shell=True)
+                prefix = prefix.replace("\n","")
+              else:
+                prefix = ''
+
+              env = {
+                'PYTHONPATH': ((self.config.get('config') or {}).get('pythonpath') or '.')
+              }
+
+              command = "logster --output=stdout %s %s | awk '{print \"%s\" $2 \" \" $3 \" \" $1}'" % (config['parser'], logfile, prefix)
+
+              print subprocess.check_output(command, env=env, shell=True)
+
+            except subprocess.CalledProcessError, e:
+              print >> sys.stderr, "Error while processing logset %s: %s" (name, e.message)
+              continue
+
+
+LogsterPoller().run()

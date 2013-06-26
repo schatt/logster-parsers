@@ -1,0 +1,18 @@
+---
+logster:
+  config:
+    pythonpath: '/opt/logster-parsers'
+
+  logs:
+    dnsmasq-dhcp:
+      prefix: 'services.prod.infrastructure.dnsmasq.dhcp.$(hostname -s).'
+      parser: 'parsers.dnsmasq.DHCP'
+      logs:
+      - /var/log/messages
+      - /var/log/syslog
+      - /var/log/dnsmasq.log
+
+    onering-worker:
+      prefix: 'services.prod.onering.$(hostname -s).$(basename $CURRENT_FILE .log | tr "." "-").'
+      parser: 'parsers.onering.backend.Worker'
+      logs:   '/var/log/onering/worker.*.log'
