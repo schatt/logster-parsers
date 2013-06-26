@@ -40,7 +40,7 @@ class LogsterPoller:
           if os.path.exists(logfile):
             try:
               if config.get('prefix'):
-                prefix  = subprocess.check_output("echo %s" % config.get('prefix'), shell=True)
+                prefix  = subprocess.Popen("echo %s" % config.get('prefix'), shell=True, stdout=subprocess.PIPE).communicate()[0]
                 prefix = prefix.replace("\n","")
               else:
                 prefix = ''
@@ -51,7 +51,7 @@ class LogsterPoller:
 
               command = "logster --output=stdout %s %s | awk '{print \"%s\" $2 \" \" $3 \" \" $1}'" % (config['parser'], logfile, prefix)
 
-              print subprocess.check_output(command, env=env, shell=True)
+              print subprocess.Popen(command, env=env, shell=True, stdout=subprocess.PIPE).communicate()[0]
 
             except subprocess.CalledProcessError, e:
               print >> sys.stderr, "Error while processing logset %s: %s" (name, e.message)

@@ -1,8 +1,5 @@
 ---
 logster:
-  config:
-    pythonpath: '/opt/logster-parsers'
-
   logs:
     dnsmasq-dhcp:
       prefix: 'services.prod.infrastructure.dnsmasq.dhcp.$(hostname -s).'
