@@ -39,16 +39,17 @@ class LogsterPoller:
         for logfile in glob.iglob(logpath):
           if os.path.exists(logfile):
             try:
-              if config.get('prefix'):
-                prefix  = subprocess.Popen("echo %s" % config.get('prefix'), shell=True, stdout=subprocess.PIPE).communicate()[0]
-                prefix = prefix.replace("\n","")
-              else:
-                prefix = ''
-
               env = {
                 'PYTHONPATH':   ((self.config.get('config') or {}).get('pythonpath') or '.'),
                 'CURRENT_FILE': logfile
               }
+
+              if config.get('prefix'):
+                prefix  = subprocess.Popen("echo %s" % config.get('prefix'), shell=True, env=env, stdout=subprocess.PIPE).communicate()[0]
+                prefix = prefix.replace("\n","")
+              else:
+                prefix = ''
+
 
               command = "logster --output=stdout %s %s | awk '{print \"%s\" $2 \" \" $3 \" \" $1}'" % (config['parser'], logfile, prefix)
 
