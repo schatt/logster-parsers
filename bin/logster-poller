@@ -46,7 +46,8 @@ class LogsterPoller:
                 prefix = ''
 
               env = {
-                'PYTHONPATH': ((self.config.get('config') or {}).get('pythonpath') or '.')
+                'PYTHONPATH':   ((self.config.get('config') or {}).get('pythonpath') or '.'),
+                'CURRENT_FILE': logfile
               }
 
               command = "logster --output=stdout %s %s | awk '{print \"%s\" $2 \" \" $3 \" \" $1}'" % (config['parser'], logfile, prefix)
