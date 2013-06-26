@@ -17,25 +17,26 @@ class Worker(LogsterParser):
     object's state variables. Takes a single argument, the line to be parsed.'''
 
     try:
-      # Apply regular expression to each line and extract interesting bits.
+    # Apply regular expression to each line and extract interesting bits.
       regMatch = self.times.match(line)
 
       if regMatch:
         linebits = regMatch.groupdict()
 
-      # save parsed results
-        self.observations.append({
-          job:           linebits['job'],
-          time_queued:   float(linebits['tts'] or 0.0),
-          time_running:  float(linebits['ttf'] or 0.0)
-        })
+        if linebits.get('job'):
+        # save parsed results
+          self.observations.append({
+            'job':          linebits['job'],
+            'time_queued':  float(linebits.get('tts') or 0.0),
+            'time_running': float(linebits.get('ttf') or 0.0)
+          })
 
-      # create if not exist
-        if not linebits['job'] in self.job_counts:
-          self.job_counts[linebits['job']] = 0
+        # create if not exist
+          if not linebits['job'] in self.job_counts:
+            self.job_counts[linebits['job']] = 0
 
-      # increment counter
-        self.job_counts[linebits['job']] = self.job_counts[linebits['job']] + 1
+        # increment counter
+          self.job_counts[linebits['job']] = self.job_counts[linebits['job']] + 1
 
       else:
         pass
@@ -56,7 +57,7 @@ class Worker(LogsterParser):
         rv.append(MetricObject(o['job'].lower()+'.time_running', o['time_running'], "Seconds"))
 
   # return counters
-    for jc in self.job_counts:
-      rv.append(MetricObject(jc['job'].lower()+'.count', jc, "Count"))
+    for name, count in self.job_counts.items():
+      rv.append(MetricObject(name.lower()+'.count', count, "Count"))
 
     return rv
