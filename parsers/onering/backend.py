@@ -8,6 +8,7 @@ class Worker(LogsterParser):
 
   def __init__(self, option_string=None):
     self.observations = []
+    self.job_counts = {}
     self.times = re.compile('^(?P<action>(?:Starting|Finished)) job (?P<job>[\w\-]+) .*\((?:(?:took (?P<ttf>[\d\.]+) seconds)|(?:(?P<tts>[\d\.]+) seconds ago))\).*')
 
 
@@ -21,14 +22,23 @@ class Worker(LogsterParser):
 
       if regMatch:
         linebits = regMatch.groupdict()
+
+      # save parsed results
         self.observations.append({
           job:           linebits['job'],
           time_queued:   float(linebits['tts'] or 0.0),
           time_running:  float(linebits['ttf'] or 0.0)
         })
 
+      # create if not exist
+        if not linebits['job'] in self.job_counts:
+          self.job_counts[linebits['job']] = 0
+
+      # increment counter
+        self.job_counts[linebits['job']] = self.job_counts[linebits['job']] + 1
+
       else:
-        raise LogsterParsingException, "regmatch failed to match"
+        pass
 
     except Exception, e:
       raise LogsterParsingException, "regmatch or contents failed with %s" % e
@@ -37,11 +47,16 @@ class Worker(LogsterParser):
   def get_state(self, duration):
     rv = []
 
+  # return times
     for o in self.observations:
       if o['time_queued'] > 0.0:
         rv.append(MetricObject(o['job'].lower()+'.time_queued', o['time_queued'], "Seconds"))
 
       if o['time_running'] > 0.0:
         rv.append(MetricObject(o['job'].lower()+'.time_running', o['time_running'], "Seconds"))
+
+  # return counters
+    for jc in self.job_counts:
+      rv.append(MetricObject(jc['job'].lower()+'.count', jc, "Count"))
 
     return rv
